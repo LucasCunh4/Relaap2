@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Liberação</title>
+    <style>
+        /* =========================================
+           ESTILOS DA TELA (VISUALIZAÇÃO NO CELULAR/PC)
+           ========================================= */
+        :root {
+            --primary-color: #0056b3;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #dddddd;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* Sistema de Abas */
+        .tabs {
+            display: flex;
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Containers de Conteúdo */
+        .content-section {
+            display: none;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        input[type="time"],
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: white;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button.danger {
+            background-color: #dc3545;
+            width: auto;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        button.warning {
+            background-color: #ffc107;
+            color: black;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+
+        .checkbox-cell {
+            text-align: center;
+        }
+
+        /* Ações em Lote e Reordenação */
+        .batch-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .batch-actions button {
+            margin-top: 0;
+            background-color: #6c757d;
+        }
+
+        .reorder-col {
+            display: none;
+            text-align: center;
+            width: 60px;
+        }
+
+        .reordering-active .reorder-col {
+            display: table-cell;
+        }
+
+        .btn-move {
+            background-color: #e2e6ea;
+            color: #333;
+            border: 1px solid #ccc;
+            padding: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            margin: 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-move:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* =========================================
+           ESTILOS DE IMPRESSÃO (O SEGREDO DO PDF)
+           ========================================= */
+        @media screen {
+            #print-area { display: none; }
+        }
+
+        @media print {
+            #app-interface { display: none !important; }
+            
+            #print-area { 
+                display: block !important; 
+                width: 100%;
+            }
+
+            body {
+                background-color: white;
+                font-family: Arial, sans-serif;
+                color: black;
+                padding: 15mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-interface">
+        <header>
+            <h2>Controle de Liberação</h2>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('release', this)">1. Liberação Diária</button>
+            <button class="tab-btn" onclick="switchTab('manage', this)">2. Gerenciar Cadastros</button>
+        </div>
+
+        <div id="tab-release" class="content-section active">
+            <div class="card">
+                <h3>Dados da Liberação</h3>
+                
+                <label for="turmaInput">Turma:</label>
+                <input type="text" id="turmaInput" placeholder="Ex: N35.2">
+
+                <label for="dateInput">Data:</label>
+                <input type="date" id="dateInput">
+
+                <label for="timeInput">Horário:</label>
+                <input type="time" id="timeInput">
+
+                <label for="respSelect">Responsável pela Liberação:</label>
+                <select id="respSelect">
+                    </select>
+            </div>
+
+            <div class="card">
+                <h3>Selecionar Pessoal</h3>
+                <div class="batch-actions">
+                    <button type="button" onclick="marcarTodos(true)">Marcar Todos</button>
+                    <button type="button" onclick="marcarTodos(false)">Desmarcar Todos</button>
+                </div>
+                
+                <table id="releaseTable">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">Liberar?</th>
+                            <th>Nome Completo</th>
+                            <th>Nome de Guerra</th>
+                            <th class="checkbox-cell">Negrito?</th>
+                        </tr>
+                    </thead>
+                    <tbody id="releaseTableBody">
+                        </tbody>
+                </table>
+
+                <button style="margin-top: 30px; background-color: #28a745; font-size: 18px;" onclick="gerarImpressao()">
+                    [+] Visualizar e Imprimir / Salvar PDF
+                </button>
+            </div>
+        </div>
+
+        <div id="tab-manage" class="content-section">
+            
+            <div class="card">
+                <h3>Cadastrar Responsável</h3>
+                <label for="respNameInput">Nome Completo:</label>
+                <input type="text" id="respNameInput" placeholder="Ex: LUIZ CLAUDIO ROCHA DA PAIXÃO">
+                
+                <label for="respPostoInput">Posto/Graduação:</label>
+                <input type="text" id="respPostoInput" placeholder="Ex: Capitão de Corveta">
+                
+                <label for="respFuncaoInput">Função:</label>
+                <input type="text" id="respFuncaoInput" placeholder="Ex: Imediato do Corpo de Alunos">
+
+                <button onclick="adicionarResponsavel()">+ Adicionar Responsável</button>
+
+                <table style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th>Responsável</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="respTableBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Adicionar Pessoal à Tropa</h3>
+                <label for="fullNameInput">Nome Completo:</label>
+                <input type="text" id="fullNameInput" placeholder="Ex: Thiago Alves Ribeiro Gomes">
+
+                <label for="warNameInput">Nome de Guerra:</label>
+                <input type="text" id="warNameInput" placeholder="Ex: N3002 - Alves">
+
+                <button onclick="adicionarPessoa()">+ Adicionar à Lista</button>
+            </div>
+
+            <div class="card">
+                <h3>Lista de Pessoal</h3>
+                <button class="warning" id="btnReorder" onclick="toggleReorder()">[ Ativar Reordenação ]</button>
+                
+                <table id="manageTable">
+                    <thead>
+                        <tr>
+                            <th class="reorder-col">Mover</th>
+                            <th>Nome Completo</th>
+                            <th>Nome de Guerra</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manageTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-area">
+        </div>
+
+    <script>
+        // =========================================
+        // BANCO DE DADOS LOCAL (LocalStorage) com Proteção
+        // =========================================
+        let database = [];
+        let responsaveisDB = [];
+        let isReordering = false;
+
+        try {
+            database = JSON.parse(localStorage.getItem('liberacaoData')) || [];
+            responsaveisDB = JSON.parse(localStorage.getItem('responsaveisData')) || [];
+        } catch (error) {
+            console.log("Erro ao carregar dados locais.");
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('liberacaoData', JSON.stringify(database));
+                localStorage.setItem('responsaveisData', JSON.stringify(responsaveisDB));
+            } catch (error) {
+                console.log("Erro ao salvar dados locais.");
+            }
+            renderTables();
+        }
+
+        // =========================================
+        // NAVEGAÇÃO DE ABAS
+        // =========================================
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabId).classList.add('active');
+            if (element) {
+                element.classList.add('active');
+            }
+        }
+
+        // =========================================
+        // GERENCIAMENTO DE RESPONSÁVEIS
+        // =========================================
+        function adicionarResponsavel() {
+            const respName = document.getElementById('respNameInput').value.trim();
+            const respPosto = document.getElementById('respPostoInput').value.trim();
+            const respFuncao = document.getElementById('respFuncaoInput').value.trim();
+
+            if (!respName || !respPosto || !respFuncao) {
+                alert("Por favor, preencha o Nome, Posto e Função do responsável.");
+                return;
+            }
+
+            const novoResp = {
+                id: Date.now().toString(),
+                name: respName,
+                posto: respPosto,
+                funcao: respFuncao
+            };
+
+            responsaveisDB.push(novoResp);
+            saveData();
+            
+            document.getElementById('respNameInput').value = '';
+            document.getElementById('respPostoInput').value = '';
+            document.getElementById('respFuncaoInput').value = '';
+        }
+
+        function removerResponsavel(id) {
+            if (confirm("Tem certeza que deseja remover este responsável?")) {
+                responsaveisDB = responsaveisDB.filter(resp => resp.id !== id);
+                saveData();
+            }
+        }
+
+        // =========================================
+        // GERENCIAMENTO DE PESSOAL
+        // =========================================
+        function adicionarPessoa() {
+            const fullName = document.getElementById('fullNameInput').value.trim();
+            const warName = document.getElementById('warNameInput').value.trim();
+
+            if (!fullName || !warName) {
+                alert("Por favor, preencha o Nome Completo e o Nome de Guerra.");
+                return;
+            }
+
+            const novaPessoa = {
+                id: Date.now().toString(),
+                fullName: fullName,
+                warName: warName
+            };
+
+            database.push(novaPessoa);
+            saveData();
+
+            document.getElementById('fullNameInput').value = '';
+            document.getElementById('warNameInput').value = '';
+        }
+
+        function removerPessoa(id) {
+            if (confirm("Tem certeza que deseja remover esta pessoa?")) {
+                database = database.filter(pessoa => pessoa.id !== id);
+                saveData();
+            }
+        }
+
+        // =========================================
+        // REORDENAÇÃO DA LISTA
+        // =========================================
+        function toggleReorder() {
+            isReordering = !isReordering;
+            const btn = document.getElementById('btnReorder');
+            const table = document.getElementById('manageTable');
+            
+            if (isReordering) {
+                btn.innerText = "[ Desativar Reordenação ]";
+                table.classList.add('reordering-active');
+            } else {
+                btn.innerText = "[ Ativar Reordenação ]";
+                table.classList.remove('reordering-active');
+            }
+        }
+
+        function moverPessoa(index, direcao) {
+            if (direcao === -1 && index > 0) {
+                const temp = database[index];
+                database[index] = database[index - 1];
+                database[index - 1] = temp;
+            } else if (direcao === 1 && index < database.length - 1) {
+                const temp = database[index];
+                database[index] = database[index + 1];
+                database[index + 1] = temp;
+            }
+            saveData();
+        }
+
+        // =========================================
+        // RENDERIZAÇÃO DAS TABELAS E MENUS
+        // =========================================
+        function renderTables() {
+            const manageBody = document.getElementById('manageTableBody');
+            const releaseBody = document.getElementById('releaseTableBody');
+            const respBody = document.getElementById('respTableBody');
+            const respSelect = document.getElementById('respSelect');
+            
+            manageBody.innerHTML = '';
+            releaseBody.innerHTML = '';
+            respBody.innerHTML = '';
+            
+            if (responsaveisDB.length === 0) {
+                respBody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Nenhum responsável cadastrado.</td></tr>';
+            } else {
+                responsaveisDB.forEach(resp => {
+                    respBody.innerHTML += `
+                        <tr>
+                            <td>${resp.name} (${resp.posto})</td>
+                            <td><button class="danger" onclick="removerResponsavel('${resp.id}')">Excluir</button></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            respSelect.innerHTML = '<option value="">Selecione um responsável...</option>';
+            responsaveisDB.forEach(resp => {
+                respSelect.innerHTML += `<option value="${resp.id}">${resp.name}</option>`;
+            });
+
+            if (database.length === 0) {
+                manageBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma pessoa cadastrada.</td></tr>';
+                releaseBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma pessoa cadastrada.</td></tr>';
+                return;
+            }
+
+            database.forEach((pessoa, index) => {
+                const disableUp = index === 0 ? 'disabled' : '';
+                const disableDown = index === database.length - 1 ? 'disabled' : '';
+
+                manageBody.innerHTML += `
+                    <tr>
+                        <td class="reorder-col">
+                            <button class="btn-move" ${disableUp} onclick="moverPessoa(${index}, -1)">&uarr;</button>
+                            <button class="btn-move" ${disableDown} onclick="moverPessoa(${index}, 1)">&darr;</button>
+                        </td>
+                        <td>${pessoa.fullName}</td>
+                        <td>${pessoa.warName}</td>
+                        <td><button class="danger" onclick="removerPessoa('${pessoa.id}')">Excluir</button></td>
+                    </tr>
+                `;
+
+                releaseBody.innerHTML += `
+                    <tr>
+                        <td class="checkbox-cell"><input type="checkbox" class="chk-liberar" data-id="${pessoa.id}"></td>
+                        <td>${pessoa.fullName}</td>
+                        <td>${pessoa.warName}</td>
+                        <td class="checkbox-cell"><input type="checkbox" class="chk-negrito" data-id="${pessoa.id}"></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // =========================================
+        // AÇÕES DA LIBERAÇÃO (Marcar todos)
+        // =========================================
+        function marcarTodos(marcar) {
+            const checkboxes = document.querySelectorAll('.chk-liberar');
+            checkboxes.forEach(chk => chk.checked = marcar);
+        }
+
+        // =========================================
+        // FUNÇÃO DE CONVERTER DATA PARA EXTENSO
+        // =========================================
+        function formatarDataExtenso(dataISO) {
+            if (!dataISO) return "";
+            const partes = dataISO.split('-');
+            if (partes.length !== 3) return dataISO;
+            
+            const meses = [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ];
+            
+            const dia = partes[2];
+            const mes = meses[parseInt(partes[1], 10) - 1];
+            const ano = partes[0];
+            
+            return `${dia} de ${mes} de ${ano}`;
+        }
+
+        // =========================================
+        // GERAÇÃO DO PDF / IMPRESSÃO NO FORMATO EXATO
+        // =========================================
+        function gerarImpressao() {
+            const turmaInput = document.getElementById('turmaInput').value.trim();
+            const dataInput = document.getElementById('dateInput').value;
+            const timeInput = document.getElementById('timeInput').value;
+            const respInputId = document.getElementById('respSelect').value;
+
+            if (!turmaInput || !dataInput || !timeInput || !respInputId) {
+                alert("Preencha a Turma, Data, Horário e selecione o Responsável antes de gerar a lista.");
+                return;
+            }
+
+            const dataExtenso = formatarDataExtenso(dataInput);
+            
+            // Busca os dados completos do responsável selecionado
+            const respObj = responsaveisDB.find(r => r.id === respInputId);
+
+            const pessoasLiberadas = [];
+            document.querySelectorAll('.chk-liberar:checked').forEach(chk => {
+                const id = chk.getAttribute('data-id');
+                const pessoa = database.find(p => p.id === id);
+                
+                const chkNegrito = document.querySelector(`.chk-negrito[data-id="${id}"]`);
+                const emNegrito = chkNegrito ? chkNegrito.checked : false;
+
+                pessoasLiberadas.push({
+                    fullName: pessoa.fullName,
+                    warName: pessoa.warName,
+                    emNegrito: emNegrito
+                });
+            });
+
+            if (pessoasLiberadas.length === 0) {
+                alert("Selecione pelo menos uma pessoa para liberar.");
+                return;
+            }
+
+            // Cabeçalho da EFOMM/CIAGA e Subcabeçalho
+            let printHTML = `
+                <div style="text-align: center; font-size: 13pt; margin-bottom: 25px;">
+                    <p style="margin: 0;">CENTRO DE INSTRUÇÃO ALMIRANTE GRAÇA ARANHA</p>
+                    <p style="margin: 0;">ESCOLA DE FORMAÇÃO DE OFICIAIS DA MARINHA MERCANTE</p>
+                    <p style="margin: 25px 0 0 0;">RELAÇÃO DE ALUNOS AUTORIZADOS A LICENCIAR</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 11pt; margin-bottom: 20px;">
+                    <span>Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</span>
+                    <span>Turma: ${turmaInput}</span>
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+                    <tbody>
+            `;
+
+            // Lista sem bordas e sem cabeçalho de tabela, como no CSV
+            pessoasLiberadas.forEach(pessoa => {
+                let nomeFormatado = pessoa.fullName;
+                let guerraFormatado = pessoa.warName;
+
+                if (pessoa.emNegrito) {
+                    nomeFormatado = `<strong>${nomeFormatado}</strong>`;
+                    guerraFormatado = `<strong>${guerraFormatado}</strong>`;
+                }
+
+                printHTML += `
+                    <tr>
+                        <td style="padding: 3px 0; border: none; width: 60%;">${nomeFormatado}</td>
+                        <td style="padding: 3px 0; border: none; width: 40%;">${guerraFormatado}</td>
+                    </tr>
+                `;
+            });
+
+            // Assinatura com linha, Nome, Posto e Função
+            printHTML += `
+                    </tbody>
+                </table>
+                <div style="text-align: center; font-size: 11pt; margin-top: 80px;">
+                    <p style="margin: 0;">______________________________________________________</p>
+                    <p style="margin: 5px 0 0 0;">${respObj.name}</p>
+                    <p style="margin: 0;">${respObj.posto}</p>
+                    <p style="margin: 0;">${respObj.funcao}</p>
+                </div>
+            `;
+
+            document.getElementById('print-area').innerHTML = printHTML;
+            window.print();
+        }
+
+        // =========================================
+        // INICIALIZAÇÃO DIRETA
+        // =========================================
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        
+        const dateInput = document.getElementById('dateInput');
+        if(dateInput) {
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+        
+        renderTables();
+
+    </script>
+</body>
+</html>
