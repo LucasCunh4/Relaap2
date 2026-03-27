@@ -202,7 +202,7 @@
 
             body {
                 background-color: white;
-                font-family: Arial, sans-serif;
+                font-family: 'Calibri', sans-serif !important;
                 color: black;
                 padding: 15mm;
             }
@@ -226,7 +226,7 @@
                 <h3>Dados da Liberação</h3>
                 
                 <label for="turmaInput">Turma:</label>
-                <input type="text" id="turmaInput">
+                <input type="text" id="turmaInput" value="N35.1">
 
                 <label for="dateInput">Data:</label>
                 <input type="date" id="dateInput">
@@ -591,23 +591,21 @@
                 return;
             }
 
+            // Início do layout de impressão com a fonte Calibri fixada
             let printHTML = `
-                <div style="text-align: center; font-size: 13pt; margin-bottom: 25px;">
-                    <p style="margin: 0;">CENTRO DE INSTRUÇÃO ALMIRANTE GRAÇA ARANHA</p>
-                    <p style="margin: 0;">ESCOLA DE FORMAÇÃO DE OFICIAIS DA MARINHA MERCANTE</p>
-                    <p style="margin: 25px 0 0 0;">RELAÇÃO DE ALUNOS AUTORIZADOS A LICENCIAR</p>
-                </div>
-                
-                <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid black;">
-                    <tbody>
-                        <tr>
-                            <td colspan="2" style="border: 1px solid black; padding: 5px;">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</span>
-                                    <span>Turma: ${turmaInput}</span>
-                                </div>
-                            </td>
-                        </tr>
+                <div style="font-family: 'Calibri', sans-serif;">
+                    <div style="text-align: center; font-size: 16pt; margin-bottom: 25px;">
+                        <p style="margin: 0;">CENTRO DE INSTRUÇÃO ALMIRANTE GRAÇA ARANHA</p>
+                        <p style="margin: 0;">ESCOLA DE FORMAÇÃO DE OFICIAIS DA MARINHA MERCANTE</p>
+                        <p style="margin: 25px 0 0 0;"><strong>RELAÇÃO DOS ALUNOS AUTORIZADOS A LICENCIAR</strong></p>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; font-family: 'Calibri', sans-serif; border: 1px solid black;">
+                        <tbody>
+                            <tr style="font-size: 16pt;">
+                                <td style="border: 1px solid black; padding: 5px; width: 100%;">Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</td>
+                                <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%;">Turma: ${turmaInput}</td>
+                            </tr>
             `;
 
             pessoasLiberadas.forEach(pessoa => {
@@ -620,21 +618,22 @@
                 }
 
                 printHTML += `
-                    <tr>
-                        <td style="border: 1px solid black; padding: 5px; width: 100%;">${nomeFormatado}</td>
-                        <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%;">${guerraFormatado}</td>
-                    </tr>
+                            <tr style="font-size: 14pt;">
+                                <td style="border: 1px solid black; padding: 5px; width: 100%;">${nomeFormatado}</td>
+                                <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%;">${guerraFormatado}</td>
+                            </tr>
                 `;
             });
 
             printHTML += `
-                    </tbody>
-                </table>
-                <div style="text-align: center; font-size: 11pt; margin-top: 80px;">
-                    <p style="margin: 0;">______________________________________________________</p>
-                    <p style="margin: 5px 0 0 0;">${respObj.name}</p>
-                    <p style="margin: 0;">${respObj.posto}</p>
-                    <p style="margin: 0;">${respObj.funcao}</p>
+                        </tbody>
+                    </table>
+                    <div style="text-align: center; font-size: 14pt; margin-top: 80px; font-family: 'Calibri', sans-serif;">
+                        <p style="margin: 0;">______________________________________________________</p>
+                        <p style="margin: 5px 0 0 0;">${respObj.name}</p>
+                        <p style="margin: 0;">${respObj.posto}</p>
+                        <p style="margin: 0;">${respObj.funcao}</p>
+                    </div>
                 </div>
             `;
 
