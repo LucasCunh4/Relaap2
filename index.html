@@ -226,7 +226,7 @@
                 <h3>Dados da Liberação</h3>
                 
                 <label for="turmaInput">Turma:</label>
-                <input type="text" id="turmaInput" placeholder="Ex: N35.2">
+                <input type="text" id="turmaInput">
 
                 <label for="dateInput">Data:</label>
                 <input type="date" id="dateInput">
@@ -270,13 +270,13 @@
             <div class="card">
                 <h3>Cadastrar Responsável</h3>
                 <label for="respNameInput">Nome Completo:</label>
-                <input type="text" id="respNameInput" placeholder="Ex: LUIZ CLAUDIO ROCHA DA PAIXÃO">
+                <input type="text" id="respNameInput">
                 
                 <label for="respPostoInput">Posto/Graduação:</label>
-                <input type="text" id="respPostoInput" placeholder="Ex: Capitão de Corveta">
+                <input type="text" id="respPostoInput">
                 
                 <label for="respFuncaoInput">Função:</label>
-                <input type="text" id="respFuncaoInput" placeholder="Ex: Imediato do Corpo de Alunos">
+                <input type="text" id="respFuncaoInput">
 
                 <button onclick="adicionarResponsavel()">+ Adicionar Responsável</button>
 
@@ -295,10 +295,10 @@
             <div class="card">
                 <h3>Adicionar Pessoal à Tropa</h3>
                 <label for="fullNameInput">Nome Completo:</label>
-                <input type="text" id="fullNameInput" placeholder="Ex: Thiago Alves Ribeiro Gomes">
+                <input type="text" id="fullNameInput">
 
                 <label for="warNameInput">Nome de Guerra:</label>
-                <input type="text" id="warNameInput" placeholder="Ex: N3002 - Alves">
+                <input type="text" id="warNameInput">
 
                 <button onclick="adicionarPessoa()">+ Adicionar à Lista</button>
             </div>
@@ -569,7 +569,6 @@
 
             const dataExtenso = formatarDataExtenso(dataInput);
             
-            // Busca os dados completos do responsável selecionado
             const respObj = responsaveisDB.find(r => r.id === respInputId);
 
             const pessoasLiberadas = [];
@@ -592,7 +591,6 @@
                 return;
             }
 
-            // Cabeçalho da EFOMM/CIAGA e Subcabeçalho
             let printHTML = `
                 <div style="text-align: center; font-size: 13pt; margin-bottom: 25px;">
                     <p style="margin: 0;">CENTRO DE INSTRUÇÃO ALMIRANTE GRAÇA ARANHA</p>
@@ -605,11 +603,10 @@
                     <span>Turma: ${turmaInput}</span>
                 </div>
                 
-                <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid black;">
                     <tbody>
             `;
 
-            // Lista sem bordas e sem cabeçalho de tabela, como no CSV
             pessoasLiberadas.forEach(pessoa => {
                 let nomeFormatado = pessoa.fullName;
                 let guerraFormatado = pessoa.warName;
@@ -621,13 +618,12 @@
 
                 printHTML += `
                     <tr>
-                        <td style="padding: 3px 0; border: none; width: 60%;">${nomeFormatado}</td>
-                        <td style="padding: 3px 0; border: none; width: 40%;">${guerraFormatado}</td>
+                        <td style="border: 1px solid black; padding: 5px; width: 100%;">${nomeFormatado}</td>
+                        <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%;">${guerraFormatado}</td>
                     </tr>
                 `;
             });
 
-            // Assinatura com linha, Nome, Posto e Função
             printHTML += `
                     </tbody>
                 </table>
