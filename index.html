@@ -598,13 +598,16 @@
                     <p style="margin: 25px 0 0 0;">RELAÇÃO DE ALUNOS AUTORIZADOS A LICENCIAR</p>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; font-size: 11pt; margin-bottom: 20px;">
-                    <span>Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</span>
-                    <span>Turma: ${turmaInput}</span>
-                </div>
-                
                 <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid black;">
                     <tbody>
+                        <tr>
+                            <td colspan="2" style="border: 1px solid black; padding: 5px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</span>
+                                    <span>Turma: ${turmaInput}</span>
+                                </div>
+                            </td>
+                        </tr>
             `;
 
             pessoasLiberadas.forEach(pessoa => {
