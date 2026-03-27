@@ -221,6 +221,14 @@
                 color: black;
                 padding: 15mm;
             }
+            
+            /* Força a renderização das bordas na impressão do Chrome */
+            table {
+                border-collapse: collapse !important;
+            }
+            td, th {
+                border: 1px solid black !important;
+            }
         }
     </style>
 </head>
@@ -448,7 +456,7 @@
 
                     saveData();
                     alert(`Importação concluída! ${importedCount} registros foram adicionados.`);
-                    document.getElementById('importInput').value = ''; // Reseta o campo de arquivo
+                    document.getElementById('importInput').value = '';
 
                 } catch (err) {
                     alert("Erro ao ler o arquivo. Certifique-se de que é um JSON válido e está no formato correto.");
@@ -711,20 +719,20 @@
                 return;
             }
 
-            // Início do layout de impressão com a fonte Calibri fixada
+            // Início do layout de impressão aplicando as fontes forçadas inline
             let printHTML = `
-                <div style="font-family: 'Calibri', sans-serif;">
-                    <div style="text-align: center; font-size: 16pt; margin-bottom: 25px;">
-                        <p style="margin: 0;">CENTRO DE INSTRUÇÃO ALMIRANTE GRAÇA ARANHA</p>
-                        <p style="margin: 0;">ESCOLA DE FORMAÇÃO DE OFICIAIS DA MARINHA MERCANTE</p>
-                        <p style="margin: 25px 0 0 0;"><strong>RELAÇÃO DOS ALUNOS AUTORIZADOS A LICENCIAR</strong></p>
+                <div style="font-family: 'Calibri', sans-serif !important; color: black !important;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                       
+                        <p style="margin: 0; font-size: 16pt !important;">ESCOLA DE FORMAÇÃO DE OFICIAIS DA MARINHA MERCANTE</p>
+                        <p style="margin: 25px 0 0 0; font-size: 16pt !important;"><strong>RELAÇÃO DOS ALUNOS AUTORIZADOS A LICENCIAR</strong></p>
                     </div>
                     
-                    <table style="width: 100%; border-collapse: collapse; font-family: 'Calibri', sans-serif; border: 1px solid black;">
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
                         <tbody>
-                            <tr style="font-size: 16pt;">
-                                <td style="border: 1px solid black; padding: 5px; width: 100%;">Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</td>
-                                <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%;">Turma: ${turmaInput}</td>
+                            <tr>
+                                <td style="border: 1px solid black; padding: 5px; width: 100%; font-size: 16pt !important;">Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</td>
+                                <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%; font-size: 16pt !important;">Turma: ${turmaInput}</td>
                             </tr>
             `;
 
@@ -738,9 +746,9 @@
                 }
 
                 printHTML += `
-                            <tr style="font-size: 14pt;">
-                                <td style="border: 1px solid black; padding: 5px; width: 100%;">${nomeFormatado}</td>
-                                <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%;">${guerraFormatado}</td>
+                            <tr>
+                                <td style="border: 1px solid black; padding: 5px; width: 100%; font-size: 14pt !important;">${nomeFormatado}</td>
+                                <td style="border: 1px solid black; padding: 5px; white-space: nowrap; width: 1%; font-size: 14pt !important;">${guerraFormatado}</td>
                             </tr>
                 `;
             });
@@ -748,11 +756,11 @@
             printHTML += `
                         </tbody>
                     </table>
-                    <div style="text-align: center; font-size: 14pt; margin-top: 80px; font-family: 'Calibri', sans-serif;">
-                        <p style="margin: 0;">______________________________________________________</p>
-                        <p style="margin: 5px 0 0 0;">${respObj.name}</p>
-                        <p style="margin: 0;">${respObj.posto}</p>
-                        <p style="margin: 0;">${respObj.funcao}</p>
+                    <div style="text-align: center; margin-top: 80px;">
+                        <p style="margin: 0; font-size: 14pt !important;">______________________________________________________</p>
+                        <p style="margin: 5px 0 0 0; font-size: 14pt !important;">${respObj.name}</p>
+                        <p style="margin: 0; font-size: 14pt !important;">${respObj.posto}</p>
+                        <p style="margin: 0; font-size: 14pt !important;">${respObj.funcao}</p>
                     </div>
                 </div>
             `;
