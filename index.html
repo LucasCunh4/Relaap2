@@ -96,6 +96,11 @@
             background-color: white;
         }
 
+        input[type="file"] {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
         button {
             background-color: var(--primary-color);
             color: white;
@@ -119,6 +124,10 @@
             background-color: #ffc107;
             color: black;
             font-weight: bold;
+        }
+
+        button.info {
+            background-color: #17a2b8;
         }
 
         table {
@@ -183,6 +192,12 @@
         .btn-move:disabled {
             opacity: 0.3;
             cursor: not-allowed;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         /* =========================================
@@ -268,7 +283,21 @@
         <div id="tab-manage" class="content-section">
             
             <div class="card">
-                <h3>Cadastrar Responsável</h3>
+                <h3>Importar / Exportar Dados</h3>
+                <p style="font-size: 14px; color: #555;">Faça backup ou importe uma lista de pessoas e responsáveis no formato JSON.</p>
+                
+                <button type="button" class="info" onclick="exportarDados()" style="margin-bottom: 20px;">⬇️ Exportar JSON</button>
+                
+                <label for="importInput" style="margin-top: 0;">⬆️ Importar JSON:</label>
+                <input type="file" id="importInput" accept=".json" onchange="importarDados(event)">
+            </div>
+
+            <div class="card">
+                <div class="flex-between">
+                    <h3 style="margin: 0;">Cadastrar Responsável</h3>
+                    <button class="danger" onclick="apagarTodosResponsaveis()" style="margin: 0;">Apagar Todos</button>
+                </div>
+                
                 <label for="respNameInput">Nome Completo:</label>
                 <input type="text" id="respNameInput">
                 
@@ -293,7 +322,11 @@
             </div>
 
             <div class="card">
-                <h3>Adicionar Pessoal à Tropa</h3>
+                <div class="flex-between">
+                    <h3 style="margin: 0;">Adicionar Pessoal</h3>
+                    <button class="danger" onclick="apagarTodasPessoas()" style="margin: 0;">Apagar Todos</button>
+                </div>
+
                 <label for="fullNameInput">Nome Completo:</label>
                 <input type="text" id="fullNameInput">
 
@@ -352,6 +385,79 @@
         }
 
         // =========================================
+        // IMPORTAR E EXPORTAR JSON
+        // =========================================
+        function exportarDados() {
+            const dataToExport = {
+                pessoas: database.map(p => ({
+                    nomeCompleto: p.fullName,
+                    nomeGuerra: p.warName
+                })),
+                responsaveis: responsaveisDB.map(r => ({
+                    nome: r.name,
+                    posto: r.posto,
+                    funcao: r.funcao
+                }))
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "dados_liberacao.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importarDados(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    let importedCount = 0;
+
+                    if (parsedData.pessoas && Array.isArray(parsedData.pessoas)) {
+                        parsedData.pessoas.forEach(p => {
+                            if (p.nomeCompleto && p.nomeGuerra) {
+                                database.push({
+                                    id: Date.now().toString() + Math.random().toString(36).substring(2),
+                                    fullName: p.nomeCompleto,
+                                    warName: p.nomeGuerra
+                                });
+                                importedCount++;
+                            }
+                        });
+                    }
+
+                    if (parsedData.responsaveis && Array.isArray(parsedData.responsaveis)) {
+                        parsedData.responsaveis.forEach(r => {
+                            if (r.nome && r.posto && r.funcao) {
+                                responsaveisDB.push({
+                                    id: Date.now().toString() + Math.random().toString(36).substring(2),
+                                    name: r.nome,
+                                    posto: r.posto,
+                                    funcao: r.funcao
+                                });
+                                importedCount++;
+                            }
+                        });
+                    }
+
+                    saveData();
+                    alert(`Importação concluída! ${importedCount} registros foram adicionados.`);
+                    document.getElementById('importInput').value = ''; // Reseta o campo de arquivo
+
+                } catch (err) {
+                    alert("Erro ao ler o arquivo. Certifique-se de que é um JSON válido e está no formato correto.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // =========================================
         // NAVEGAÇÃO DE ABAS
         // =========================================
         function switchTab(tabId, element) {
@@ -399,6 +505,13 @@
             }
         }
 
+        function apagarTodosResponsaveis() {
+            if (confirm("TEM CERTEZA? Isso apagará TODOS os responsáveis cadastrados.")) {
+                responsaveisDB = [];
+                saveData();
+            }
+        }
+
         // =========================================
         // GERENCIAMENTO DE PESSOAL
         // =========================================
@@ -427,6 +540,13 @@
         function removerPessoa(id) {
             if (confirm("Tem certeza que deseja remover esta pessoa?")) {
                 database = database.filter(pessoa => pessoa.id !== id);
+                saveData();
+            }
+        }
+
+        function apagarTodasPessoas() {
+            if (confirm("TEM CERTEZA? Isso apagará TODA a lista de pessoas cadastradas.")) {
+                database = [];
                 saveData();
             }
         }
