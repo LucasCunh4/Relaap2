@@ -201,49 +201,65 @@
         }
 
         /* =========================================
-           ESTILOS DE IMPRESSÃO (O SEGREDO DO PDF)
+           ESTILOS DE IMPRESSÃO (LIMPO E FIXO)
            ========================================= */
         @media screen {
             #print-area { display: none; }
         }
 
         @media print {
-            /* Regra mágica para o celular entender que é uma folha larga (A4) */
             @page {
                 size: A4 portrait;
-                margin: 1cm;
+                margin: 1.5cm;
             }
 
-            html, body {
-                width: 800px !important; /* Força a largura do A4 no celular */
-                max-width: 800px !important;
-                margin: 0 auto !important;
-                padding: 0 !important;
-                background-color: white !important;
-            }
-
-            * {
-                -webkit-text-size-adjust: none !important;
-                text-size-adjust: none !important;
-                line-height: 1.2 !important;
+            body {
+                background-color: white;
+                font-family: 'Calibri', Arial, sans-serif !important;
+                color: black;
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
             }
 
             #app-interface { display: none !important; }
             
             #print-area { 
                 display: block !important; 
-                width: 800px !important;
-                margin: 0 auto;
-                padding: 0;
-            }
-            
-            table {
-                border-collapse: collapse !important;
-                width: 100% !important;
+                width: 100%;
             }
 
-            td, th {
+            /* Estilização idêntica a uma planilha do Excel */
+            .print-header p {
+                margin: 0;
+                font-size: 13pt !important;
+                text-align: center;
+                line-height: 1.3;
+            }
+
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            .print-table td {
                 border: 1px solid black !important;
+                padding: 3px 6px !important;
+                font-size: 11pt !important; /* Tamanho padrão de documento */
+            }
+
+            .col-main { width: 100%; }
+            .col-side { width: 1%; white-space: nowrap; }
+
+            .print-footer {
+                margin-top: 60px;
+                text-align: center;
+            }
+
+            .print-footer p {
+                margin: 4px 0;
+                font-size: 11pt !important;
             }
         }
     </style>
@@ -309,9 +325,7 @@
             <div class="card">
                 <h3>Importar / Exportar Dados</h3>
                 <p style="font-size: 14px; color: #555;">Faça backup ou importe uma lista de pessoas e responsáveis no formato JSON.</p>
-                
                 <button type="button" class="info" onclick="exportarDados()" style="margin-bottom: 20px;">⬇️ Exportar JSON</button>
-                
                 <label for="importInput" style="margin-top: 0;">⬆️ Importar JSON:</label>
                 <input type="file" id="importInput" accept=".json" onchange="importarDados(event)">
             </div>
@@ -321,27 +335,16 @@
                     <h3 style="margin: 0;">Cadastrar Responsável</h3>
                     <button class="danger" onclick="apagarTodosResponsaveis()" style="margin: 0;">Apagar Todos</button>
                 </div>
-                
                 <label for="respNameInput">Nome Completo:</label>
                 <input type="text" id="respNameInput">
-                
                 <label for="respPostoInput">Posto/Graduação:</label>
                 <input type="text" id="respPostoInput">
-                
                 <label for="respFuncaoInput">Função:</label>
                 <input type="text" id="respFuncaoInput">
-
                 <button onclick="adicionarResponsavel()">+ Adicionar Responsável</button>
-
                 <table style="margin-top: 15px;">
-                    <thead>
-                        <tr>
-                            <th>Responsável</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="respTableBody">
-                        </tbody>
+                    <thead><tr><th>Responsável</th><th>Ação</th></tr></thead>
+                    <tbody id="respTableBody"></tbody>
                 </table>
             </div>
 
@@ -350,31 +353,19 @@
                     <h3 style="margin: 0;">Adicionar Pessoal</h3>
                     <button class="danger" onclick="apagarTodasPessoas()" style="margin: 0;">Apagar Todos</button>
                 </div>
-
                 <label for="fullNameInput">Nome Completo:</label>
                 <input type="text" id="fullNameInput">
-
                 <label for="warNameInput">Nome de Guerra:</label>
                 <input type="text" id="warNameInput">
-
                 <button onclick="adicionarPessoa()">+ Adicionar à Lista</button>
             </div>
 
             <div class="card">
                 <h3>Lista de Pessoal</h3>
                 <button class="warning" id="btnReorder" onclick="toggleReorder()">[ Ativar Reordenação ]</button>
-                
                 <table id="manageTable">
-                    <thead>
-                        <tr>
-                            <th class="reorder-col">Mover</th>
-                            <th>Nome Completo</th>
-                            <th>Nome de Guerra</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="manageTableBody">
-                        </tbody>
+                    <thead><tr><th class="reorder-col">Mover</th><th>Nome Completo</th><th>Nome de Guerra</th><th>Ação</th></tr></thead>
+                    <tbody id="manageTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -385,7 +376,7 @@
 
     <script>
         // =========================================
-        // BANCO DE DADOS LOCAL (LocalStorage) com Proteção
+        // BANCO DE DADOS LOCAL
         // =========================================
         let database = [];
         let responsaveisDB = [];
@@ -394,413 +385,17 @@
         try {
             database = JSON.parse(localStorage.getItem('liberacaoData')) || [];
             responsaveisDB = JSON.parse(localStorage.getItem('responsaveisData')) || [];
-        } catch (error) {
-            console.log("Erro ao carregar dados locais.");
-        }
+        } catch (error) { console.log("Erro ao carregar dados locais."); }
 
         function saveData() {
             try {
                 localStorage.setItem('liberacaoData', JSON.stringify(database));
                 localStorage.setItem('responsaveisData', JSON.stringify(responsaveisDB));
-            } catch (error) {
-                console.log("Erro ao salvar dados locais.");
-            }
+            } catch (error) { console.log("Erro ao salvar dados locais."); }
             renderTables();
         }
 
         // =========================================
         // IMPORTAR E EXPORTAR JSON
         // =========================================
-        function exportarDados() {
-            const dataToExport = {
-                pessoas: database.map(p => ({
-                    nomeCompleto: p.fullName,
-                    nomeGuerra: p.warName
-                })),
-                responsaveis: responsaveisDB.map(r => ({
-                    nome: r.name,
-                    posto: r.posto,
-                    funcao: r.funcao
-                }))
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "dados_liberacao.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-
-        function importarDados(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsedData = JSON.parse(e.target.result);
-                    let importedCount = 0;
-
-                    if (parsedData.pessoas && Array.isArray(parsedData.pessoas)) {
-                        parsedData.pessoas.forEach(p => {
-                            if (p.nomeCompleto && p.nomeGuerra) {
-                                database.push({
-                                    id: Date.now().toString() + Math.random().toString(36).substring(2),
-                                    fullName: p.nomeCompleto,
-                                    warName: p.nomeGuerra
-                                });
-                                importedCount++;
-                            }
-                        });
-                    }
-
-                    if (parsedData.responsaveis && Array.isArray(parsedData.responsaveis)) {
-                        parsedData.responsaveis.forEach(r => {
-                            if (r.nome && r.posto && r.funcao) {
-                                responsaveisDB.push({
-                                    id: Date.now().toString() + Math.random().toString(36).substring(2),
-                                    name: r.nome,
-                                    posto: r.posto,
-                                    funcao: r.funcao
-                                });
-                                importedCount++;
-                            }
-                        });
-                    }
-
-                    saveData();
-                    alert(`Importação concluída! ${importedCount} registros foram adicionados.`);
-                    document.getElementById('importInput').value = '';
-
-                } catch (err) {
-                    alert("Erro ao ler o arquivo. Certifique-se de que é um JSON válido e está no formato correto.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // =========================================
-        // NAVEGAÇÃO DE ABAS
-        // =========================================
-        function switchTab(tabId, element) {
-            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById('tab-' + tabId).classList.add('active');
-            if (element) {
-                element.classList.add('active');
-            }
-        }
-
-        // =========================================
-        // GERENCIAMENTO DE RESPONSÁVEIS
-        // =========================================
-        function adicionarResponsavel() {
-            const respName = document.getElementById('respNameInput').value.trim();
-            const respPosto = document.getElementById('respPostoInput').value.trim();
-            const respFuncao = document.getElementById('respFuncaoInput').value.trim();
-
-            if (!respName || !respPosto || !respFuncao) {
-                alert("Por favor, preencha o Nome, Posto e Função do responsável.");
-                return;
-            }
-
-            const novoResp = {
-                id: Date.now().toString(),
-                name: respName,
-                posto: respPosto,
-                funcao: respFuncao
-            };
-
-            responsaveisDB.push(novoResp);
-            saveData();
-            
-            document.getElementById('respNameInput').value = '';
-            document.getElementById('respPostoInput').value = '';
-            document.getElementById('respFuncaoInput').value = '';
-        }
-
-        function removerResponsavel(id) {
-            if (confirm("Tem certeza que deseja remover este responsável?")) {
-                responsaveisDB = responsaveisDB.filter(resp => resp.id !== id);
-                saveData();
-            }
-        }
-
-        function apagarTodosResponsaveis() {
-            if (confirm("TEM CERTEZA? Isso apagará TODOS os responsáveis cadastrados.")) {
-                responsaveisDB = [];
-                saveData();
-            }
-        }
-
-        // =========================================
-        // GERENCIAMENTO DE PESSOAL
-        // =========================================
-        function adicionarPessoa() {
-            const fullName = document.getElementById('fullNameInput').value.trim();
-            const warName = document.getElementById('warNameInput').value.trim();
-
-            if (!fullName || !warName) {
-                alert("Por favor, preencha o Nome Completo e o Nome de Guerra.");
-                return;
-            }
-
-            const novaPessoa = {
-                id: Date.now().toString(),
-                fullName: fullName,
-                warName: warName
-            };
-
-            database.push(novaPessoa);
-            saveData();
-
-            document.getElementById('fullNameInput').value = '';
-            document.getElementById('warNameInput').value = '';
-        }
-
-        function removerPessoa(id) {
-            if (confirm("Tem certeza que deseja remover esta pessoa?")) {
-                database = database.filter(pessoa => pessoa.id !== id);
-                saveData();
-            }
-        }
-
-        function apagarTodasPessoas() {
-            if (confirm("TEM CERTEZA? Isso apagará TODA a lista de pessoas cadastradas.")) {
-                database = [];
-                saveData();
-            }
-        }
-
-        // =========================================
-        // REORDENAÇÃO DA LISTA
-        // =========================================
-        function toggleReorder() {
-            isReordering = !isReordering;
-            const btn = document.getElementById('btnReorder');
-            const table = document.getElementById('manageTable');
-            
-            if (isReordering) {
-                btn.innerText = "[ Desativar Reordenação ]";
-                table.classList.add('reordering-active');
-            } else {
-                btn.innerText = "[ Ativar Reordenação ]";
-                table.classList.remove('reordering-active');
-            }
-        }
-
-        function moverPessoa(index, direcao) {
-            if (direcao === -1 && index > 0) {
-                const temp = database[index];
-                database[index] = database[index - 1];
-                database[index - 1] = temp;
-            } else if (direcao === 1 && index < database.length - 1) {
-                const temp = database[index];
-                database[index] = database[index + 1];
-                database[index + 1] = temp;
-            }
-            saveData();
-        }
-
-        // =========================================
-        // RENDERIZAÇÃO DAS TABELAS E MENUS
-        // =========================================
-        function renderTables() {
-            const manageBody = document.getElementById('manageTableBody');
-            const releaseBody = document.getElementById('releaseTableBody');
-            const respBody = document.getElementById('respTableBody');
-            const respSelect = document.getElementById('respSelect');
-            
-            manageBody.innerHTML = '';
-            releaseBody.innerHTML = '';
-            respBody.innerHTML = '';
-            
-            if (responsaveisDB.length === 0) {
-                respBody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Nenhum responsável cadastrado.</td></tr>';
-            } else {
-                responsaveisDB.forEach(resp => {
-                    respBody.innerHTML += `
-                        <tr>
-                            <td>${resp.name} (${resp.posto})</td>
-                            <td><button class="danger" onclick="removerResponsavel('${resp.id}')">Excluir</button></td>
-                        </tr>
-                    `;
-                });
-            }
-
-            respSelect.innerHTML = '<option value="">Selecione um responsável...</option>';
-            responsaveisDB.forEach(resp => {
-                respSelect.innerHTML += `<option value="${resp.id}">${resp.name}</option>`;
-            });
-
-            if (database.length === 0) {
-                manageBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma pessoa cadastrada.</td></tr>';
-                releaseBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma pessoa cadastrada.</td></tr>';
-                return;
-            }
-
-            database.forEach((pessoa, index) => {
-                const disableUp = index === 0 ? 'disabled' : '';
-                const disableDown = index === database.length - 1 ? 'disabled' : '';
-
-                manageBody.innerHTML += `
-                    <tr>
-                        <td class="reorder-col">
-                            <button class="btn-move" ${disableUp} onclick="moverPessoa(${index}, -1)">&uarr;</button>
-                            <button class="btn-move" ${disableDown} onclick="moverPessoa(${index}, 1)">&darr;</button>
-                        </td>
-                        <td>${pessoa.fullName}</td>
-                        <td>${pessoa.warName}</td>
-                        <td><button class="danger" onclick="removerPessoa('${pessoa.id}')">Excluir</button></td>
-                    </tr>
-                `;
-
-                releaseBody.innerHTML += `
-                    <tr>
-                        <td class="checkbox-cell"><input type="checkbox" class="chk-liberar" data-id="${pessoa.id}"></td>
-                        <td>${pessoa.fullName}</td>
-                        <td>${pessoa.warName}</td>
-                        <td class="checkbox-cell"><input type="checkbox" class="chk-negrito" data-id="${pessoa.id}"></td>
-                    </tr>
-                `;
-            });
-        }
-
-        // =========================================
-        // AÇÕES DA LIBERAÇÃO (Marcar todos)
-        // =========================================
-        function marcarTodos(marcar) {
-            const checkboxes = document.querySelectorAll('.chk-liberar');
-            checkboxes.forEach(chk => chk.checked = marcar);
-        }
-
-        // =========================================
-        // FUNÇÃO DE CONVERTER DATA PARA EXTENSO
-        // =========================================
-        function formatarDataExtenso(dataISO) {
-            if (!dataISO) return "";
-            const partes = dataISO.split('-');
-            if (partes.length !== 3) return dataISO;
-            
-            const meses = [
-                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
-                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-            ];
-            
-            const dia = partes[2];
-            const mes = meses[parseInt(partes[1], 10) - 1];
-            const ano = partes[0];
-            
-            return `${dia} de ${mes} de ${ano}`;
-        }
-
-        // =========================================
-        // GERAÇÃO DO PDF / IMPRESSÃO NO FORMATO EXATO
-        // =========================================
-        function gerarImpressao() {
-            const turmaInput = document.getElementById('turmaInput').value.trim();
-            const dataInput = document.getElementById('dateInput').value;
-            const timeInput = document.getElementById('timeInput').value;
-            const respInputId = document.getElementById('respSelect').value;
-
-            if (!turmaInput || !dataInput || !timeInput || !respInputId) {
-                alert("Preencha a Turma, Data, Horário e selecione o Responsável antes de gerar a lista.");
-                return;
-            }
-
-            const dataExtenso = formatarDataExtenso(dataInput);
-            
-            const respObj = responsaveisDB.find(r => r.id === respInputId);
-
-            const pessoasLiberadas = [];
-            document.querySelectorAll('.chk-liberar:checked').forEach(chk => {
-                const id = chk.getAttribute('data-id');
-                const pessoa = database.find(p => p.id === id);
-                
-                const chkNegrito = document.querySelector(`.chk-negrito[data-id="${id}"]`);
-                const emNegrito = chkNegrito ? chkNegrito.checked : false;
-
-                pessoasLiberadas.push({
-                    fullName: pessoa.fullName,
-                    warName: pessoa.warName,
-                    emNegrito: emNegrito
-                });
-            });
-
-            if (pessoasLiberadas.length === 0) {
-                alert("Selecione pelo menos uma pessoa para liberar.");
-                return;
-            }
-
-            // A MÁGICA FINAL: A div principal agora tem 800px cravados, 
-            // obrigando o Chrome do celular a mostrar do tamanho real e com pt
-            let printHTML = `
-                <div style="width: 800px !important; margin: 0 auto; font-family: 'Calibri', Arial, sans-serif !important; color: black !important;">
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <p style="margin: 0; font-size: 16pt !important;">CENTRO DE INSTRUÇÃO ALMIRANTE GRAÇA ARANHA</p>
-                        <p style="margin: 0; font-size: 16pt !important;">ESCOLA DE FORMAÇÃO DE OFICIAIS DA MARINHA MERCANTE</p>
-                        <p style="margin: 20px 0 0 0; font-size: 16pt !important;"><strong>RELAÇÃO DOS ALUNOS AUTORIZADOS A LICENCIAR</strong></p>
-                    </div>
-                    
-                    <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
-                        <tbody>
-                            <tr>
-                                <td style="border: 1px solid black; padding: 4px; width: 100%; font-size: 16pt !important;">Alunos autorizados a licenciar às ${timeInput}h do dia ${dataExtenso}</td>
-                                <td style="border: 1px solid black; padding: 4px; white-space: nowrap; width: 1%; font-size: 16pt !important;">Turma: ${turmaInput}</td>
-                            </tr>
-            `;
-
-            pessoasLiberadas.forEach(pessoa => {
-                let nomeFormatado = pessoa.fullName;
-                let guerraFormatado = pessoa.warName;
-
-                if (pessoa.emNegrito) {
-                    nomeFormatado = `<strong>${nomeFormatado}</strong>`;
-                    guerraFormatado = `<strong>${guerraFormatado}</strong>`;
-                }
-
-                printHTML += `
-                            <tr>
-                                <td style="border: 1px solid black; padding: 4px; width: 100%; font-size: 14pt !important;">${nomeFormatado}</td>
-                                <td style="border: 1px solid black; padding: 4px; white-space: nowrap; width: 1%; font-size: 14pt !important;">${guerraFormatado}</td>
-                            </tr>
-                `;
-            });
-
-            printHTML += `
-                        </tbody>
-                    </table>
-                    <div style="text-align: center; margin-top: 60px;">
-                        <p style="margin: 0; font-size: 14pt !important;">______________________________________________________</p>
-                        <p style="margin: 5px 0 0 0; font-size: 14pt !important;">${respObj.name}</p>
-                        <p style="margin: 0; font-size: 14pt !important;">${respObj.posto}</p>
-                        <p style="margin: 0; font-size: 14pt !important;">${respObj.funcao}</p>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('print-area').innerHTML = printHTML;
-            window.print();
-        }
-
-        // =========================================
-        // INICIALIZAÇÃO DIRETA
-        // =========================================
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        
-        const dateInput = document.getElementById('dateInput');
-        if(dateInput) {
-            dateInput.value = `${yyyy}-${mm}-${dd}`;
-        }
-        
-        renderTables();
-
-    </script>
-</body>
-</html>
+        function export
